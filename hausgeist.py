@@ -1,5 +1,6 @@
 import os
 import time
+import redis
 
 from dotenv import load_dotenv
 from twitchio.ext import commands
@@ -39,6 +40,14 @@ bot = commands.Bot(
     nick=NICK,
     initial_channels=[CHANNEL]
 )
+
+#redis-server related
+R_HOST = os.getenv("REDIS_HOST")
+R_PORT = os.getenv("REDIS_PORT")
+R_DB = os.getenv("REDIS_DB")
+R_PW = os.getenv("REDIS_PW")
+
+r = redis.Redis(host=R_HOST, port=R_PORT, db=R_DB, password=R_PW)
 
 
 def get_percentage(part, total):
@@ -199,6 +208,9 @@ async def event_message(ctx):
             if len(votes) >= VOTE_MIN_VOTES:
                 vote_first = time.time()
                 await notify_vote_result(ctx)
+                
+        # update redis-database
+        update_redis()
 
 
 def add_vote(ctx, votetype):
@@ -215,7 +227,28 @@ def add_vote(ctx, votetype):
 
     # add vote to dict
     votes[ctx.author.name] = votetype
+    
+    # update redis-database
+    update_redis()
 
+def update_redis():
+    """analyzes the votes-dict and counts the votes"""
+    plus = 0
+    minus = 0
+    neutral = 0
+
+    # count values in dict
+    for x in votes.values():
+        if x == 'neutral':
+            neutral += 1
+        elif x == 'plus':
+            plus += 1
+        elif x == 'minus':
+            minus += 1
+
+    r.set('neutral', neutral)
+    r.set('plus', plus)
+    r.set('minus', minus)
 
 def get_votes():
     """analyzes the votes-dict and counts the votes"""
