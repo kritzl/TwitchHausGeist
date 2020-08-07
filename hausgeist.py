@@ -30,6 +30,7 @@ VOTE_COLOR = os.getenv("VOTE_COLOR")
 VOTE_PLUS = os.getenv("VOTE_PLUS")
 VOTE_MINUS = os.getenv("VOTE_MINUS")
 VOTE_NEUTRAL = os.getenv("VOTE_NEUTRAL")
+
 vote_first = 0
 vote_last = 0
 votes = {}
@@ -170,6 +171,21 @@ async def cmd_pipimeter(ctx):
     if ctx.author.is_mod:
         await notify_pipi(ctx, use_timer=False)
 
+# allows mods to control voting-overlay
+@bot.command(name="votingon")
+async def cmd_pipimeter(ctx):
+    if ctx.author.is_mod:
+        r.set('validvoting', 1)
+
+@bot.command(name="votingoff")
+async def cmd_pipimeter(ctx):
+    if ctx.author.is_mod:
+        r.set('validvoting', 0)
+
+@bot.command(name="votingoffnow")
+async def cmd_pipimeter(ctx):
+    if ctx.author.is_mod:
+        r.set('validvoting', -1)
 
 @bot.event
 async def event_message(ctx):
@@ -202,6 +218,8 @@ async def event_message(ctx):
             vote_first = 0
             vote_last = 0
             votes.clear()
+            # disable voting-widget
+            r.set('validvoting', 0)
 
         # have X seconds passed since first vote? -> post interim result
         if time.time() >= vote_first + VOTE_DELAY_INTERIM and vote_first != 0:
