@@ -50,6 +50,17 @@ R_PW = os.getenv("REDIS_PW")
 
 r = redis.Redis(host=R_HOST, port=R_PORT, db=R_DB, password=R_PW)
 
+# update constants in Redis-DB
+r.set('pipiDelay', PIPI_DELAY)
+r.set('pipiT1', PIPI_THRESHOLD_1)
+r.set('pipiT2', PIPI_THRESHOLD_2)
+r.set('voteMin', VOTE_MIN_VOTES)
+
+# reset DB
+r.set('plus', 0)
+r.set('neutral', 0)
+r.set('minus', 0)
+
 
 def get_percentage(part, total):
     """ Calculate percentage """
@@ -187,6 +198,11 @@ async def cmd_pipimeter(ctx):
     if ctx.author.is_mod:
         r.set('validvoting', -1)
 
+@bot.command(name="votingauto")
+async def cmd_pipimeter(ctx):
+    if ctx.author.is_mod:
+        r.set('validvoting', 2)
+
 @bot.event
 async def event_message(ctx):
     global votes, vote_first, vote_last
@@ -218,8 +234,7 @@ async def event_message(ctx):
             vote_first = 0
             vote_last = 0
             votes.clear()
-            # disable voting-widget
-            r.set('validvoting', 0)
+            
 
         # have X seconds passed since first vote? -> post interim result
         if time.time() >= vote_first + VOTE_DELAY_INTERIM and vote_first != 0:
