@@ -198,26 +198,6 @@ async def cmd_pipimeter(ctx):
     if ctx.author.is_mod:
         await notify_pipi(ctx, use_timer=False)
 
-# allows mods to control voting-overlay
-@bot.command(name="votingon")
-async def cmd_pipimeter(ctx):
-    if ctx.author.is_mod:
-        r.set('validvoting', 1)
-
-@bot.command(name="votingoff")
-async def cmd_pipimeter(ctx):
-    if ctx.author.is_mod:
-        r.set('validvoting', 0)
-
-@bot.command(name="votingoffnow")
-async def cmd_pipimeter(ctx):
-    if ctx.author.is_mod:
-        r.set('validvoting', -1)
-
-@bot.command(name="votingauto")
-async def cmd_pipimeter(ctx):
-    if ctx.author.is_mod:
-        r.set('validvoting', 2)
 
 @bot.event
 async def event_message(message):
@@ -244,7 +224,6 @@ async def event_message(message):
         if useRedis:
             # update redis-database
             update_redis()
-
 
 def add_vote(ctx, votetype):
     """adds votes to the votes-dict and sets timestamps"""
