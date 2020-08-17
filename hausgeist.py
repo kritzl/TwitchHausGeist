@@ -306,7 +306,6 @@ async def vote_end_voting(channel):
         # update redis-database
         update_redis()
 
-
 async def vote_interim_voting(channel):
     """ End a currently open voting """
 
@@ -316,11 +315,10 @@ async def vote_interim_voting(channel):
     if not vote_end_task.done() and len(votes) >= VOTE_MIN_VOTES:
         await notify_vote_result(channel)
         vote_interim_task = asyncio.create_task(vote_interim_voting(bot.get_channel(CHANNEL)))
-    
+
     if useRedis:
         # update redis-database
         update_redis()
-
 
 async def pipi_block_notification():
     """ Just do nothing but sleep for PIPI_DELAY seconds """
