@@ -56,11 +56,15 @@ r.set('pipiDelay', PIPI_DELAY)
 r.set('pipiT1', PIPI_THRESHOLD_1)
 r.set('pipiT2', PIPI_THRESHOLD_2)
 r.set('voteMin', VOTE_MIN_VOTES)
+r.set('voteDelayEnd', VOTE_DELAY_END)
+r.set('voteDelayInter', VOTE_DELAY_INTERIM)
 
 # reset DB
-r.set('plus', 0)
-r.set('neutral', 0)
-r.set('minus', 0)
+p = r.pipeline() # start transaction
+p.set('plus', 0)
+p.set('neutral', 0)
+p.set('minus', 0)
+p.execute() # transaction end
 
 
 def get_percentage(part, total):
@@ -262,9 +266,11 @@ def update_redis():
         elif x == 'minus':
             minus += 1
 
-    r.set('neutral', neutral)
-    r.set('plus', plus)
-    r.set('minus', minus)
+    p = r.pipeline() # start transaction
+    p.set('plus', plus)
+    p.set('neutral', neutral)
+    p.set('minus', minus)
+    p.execute() # transaction end
 
 def get_votes():
     """analyzes the votes-dict and counts the votes"""
