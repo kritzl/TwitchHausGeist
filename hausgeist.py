@@ -49,22 +49,34 @@ R_PORT = os.getenv("REDIS_PORT")
 R_DB = os.getenv("REDIS_DB")
 R_PW = os.getenv("REDIS_PW")
 
-r = redis.Redis(host=R_HOST, port=R_PORT, db=R_DB, password=R_PW)
+useRedis = False
 
-# update constants in Redis-DB
-r.set('pipiDelay', PIPI_DELAY)
-r.set('pipiT1', PIPI_THRESHOLD_1)
-r.set('pipiT2', PIPI_THRESHOLD_2)
-r.set('voteMin', VOTE_MIN_VOTES)
-r.set('voteDelayEnd', VOTE_DELAY_END)
-r.set('voteDelayInter', VOTE_DELAY_INTERIM)
+# try to connect
+try:
+    r = redis.Redis(host=R_HOST, port=R_PORT, db=R_DB, password=R_PW)
+    print(r)
+    r.ping()
+    useRedis = True
+    print('Redis: Connected!')
+except Exception as ex:
+    print('A connection to the Redis server could not be established. Redis querys are avoided.')
 
-# reset DB
-p = r.pipeline() # start transaction
-p.set('plus', 0)
-p.set('neutral', 0)
-p.set('minus', 0)
-p.execute() # transaction end
+
+if useRedis:
+    # update constants in Redis-DB
+    r.set('pipiDelay', PIPI_DELAY)
+    r.set('pipiT1', PIPI_THRESHOLD_1)
+    r.set('pipiT2', PIPI_THRESHOLD_2)
+    r.set('voteMin', VOTE_MIN_VOTES)
+    r.set('voteDelayEnd', VOTE_DELAY_END)
+    r.set('voteDelayInter', VOTE_DELAY_INTERIM)
+
+    # reset DB
+    p = r.pipeline() # start transaction
+    p.set('plus', 0)
+    p.set('neutral', 0)
+    p.set('minus', 0)
+    p.execute() # transaction end
 
 
 def get_percentage(part, total):
@@ -229,8 +241,9 @@ async def event_message(message):
         elif msg[:1] == '-' or msg[:len(VOTE_MINUS)] == VOTE_MINUS:
             add_vote(message, 'minus')
 
-        # update redis-database
-        update_redis()
+        if useRedis:
+            # update redis-database
+            update_redis()
 
 
 def add_vote(ctx, votetype):
@@ -248,8 +261,9 @@ def add_vote(ctx, votetype):
     # add vote to dict
     votes[ctx.author.name] = votetype
 
-    # update redis-database
-    update_redis()
+    if useRedis:
+        # update redis-database
+        update_redis()
 
 def update_redis():
     """analyzes the votes-dict and counts the votes"""
@@ -266,11 +280,12 @@ def update_redis():
         elif x == 'minus':
             minus += 1
 
-    p = r.pipeline() # start transaction
-    p.set('plus', plus)
-    p.set('neutral', neutral)
-    p.set('minus', minus)
-    p.execute() # transaction end
+    if useRedis:
+        p = r.pipeline() # start transaction
+        p.set('plus', plus)
+        p.set('neutral', neutral)
+        p.set('minus', minus)
+        p.execute() # transaction end
 
 def get_votes():
     """analyzes the votes-dict and counts the votes"""
@@ -308,8 +323,9 @@ async def vote_end_voting(channel):
 
     votes.clear()
 
-    # update redis-database
-    update_redis()
+    if useRedis:
+        # update redis-database
+        update_redis()
 
 
 async def vote_interim_voting(channel):
@@ -322,8 +338,9 @@ async def vote_interim_voting(channel):
         await notify_vote_result(channel)
         vote_interim_task = asyncio.create_task(vote_interim_voting(bot.get_channel(CHANNEL)))
     
-    # update redis-database
-    update_redis()
+    if useRedis:
+        # update redis-database
+        update_redis()
 
 
 async def pipi_block_notification():
