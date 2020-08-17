@@ -5,11 +5,11 @@ This Twitch Bot offers two different usages.
 
 Checks every chat message for the following beginnings:
 
-Ergebnis | Mögliche Trigger
+results in | trigger
 --- | ---
-Neutral | `+-` `-+` `+/-` `-/+` `haugeNeut`  
-Plus | `+` `haugePlus`  
-Minus | `-` `haugeMinu`  
+neutral | `+-` `-+` `+/-` `-/+` `haugeNeut`  
+plus | `+` `haugePlus`  
+minus | `-` `haugeMinu`  
 
 Posts an interim result every 20 seconds and an end result after 5 seconds of no additional votes.
 
